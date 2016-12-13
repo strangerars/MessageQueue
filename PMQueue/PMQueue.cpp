@@ -15,12 +15,12 @@ using namespace std;
 /********************************************************
 ****************TEST BRANCH PARAMS***********************
 *********************************************************/
-const unsigned int PRIORITY_COUNT     = 15;
-const unsigned int MESSAGE_SIZE       = 2;
-const unsigned int QUEUE_SIZE         = 2;
-const unsigned int HWL                = QUEUE_SIZE * 9 /10;
-const unsigned int LWL                = QUEUE_SIZE / 10;
-const auto TIME_SCALE                 = 1ns;
+constexpr unsigned int PRIORITY_COUNT     = 15;
+constexpr unsigned int MESSAGE_SIZE       = 200000;
+constexpr unsigned int QUEUE_SIZE         = 20;
+constexpr unsigned int HWL                = QUEUE_SIZE * 9 /10;
+constexpr unsigned int LWL                = QUEUE_SIZE / 10;
+constexpr auto TIME_SCALE                 = 1ns;
 /*********************************************************/
 
 struct Message {
