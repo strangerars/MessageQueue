@@ -12,7 +12,7 @@ class Reader
 	F m_handle_functor = nullptr;
 	MessageQueue<T>* m_q_ptr = nullptr;
 	void handle_message(T&& arg) {
-		m_handle_functor(forward<T>(arg));
+		m_handle_functor(move(arg));
 	}
 
 public:
@@ -25,7 +25,7 @@ public:
 		RetCodes ret = RetCodes::OK;
 		while (ret != RetCodes::STOPED) {
 			ret = m_q_ptr->get(a);
-			if(ret == RetCodes::OK) handle_message(forward<T>(a));
+			if(ret == RetCodes::OK) handle_message(move(a));
 		}
 		log_debug( "READER IS OVER");
 	}

@@ -15,12 +15,12 @@ using namespace std;
 /********************************************************
 ****************TEST BRANCH PARAMS***********************
 *********************************************************/
-const int PRIORITY_COUNT     = 15;
-const int MESSAGE_SIZE       = 20000;
-const int QUEUE_SIZE         = 2;
-const int HWL                = QUEUE_SIZE * 9 /10;
-const int LWL                = QUEUE_SIZE / 10;
-const auto TIME_SCALE        = 1ns;
+const unsigned int PRIORITY_COUNT     = 15;
+const unsigned int MESSAGE_SIZE       = 2;
+const unsigned int QUEUE_SIZE         = 2;
+const unsigned int HWL                = QUEUE_SIZE * 9 /10;
+const unsigned int LWL                = QUEUE_SIZE / 10;
+const auto TIME_SCALE                 = 1ns;
 /*********************************************************/
 
 struct Message {
@@ -28,6 +28,11 @@ struct Message {
 	std::chrono::steady_clock::time_point created;
 	string s;
 	friend ostream& operator<<(ostream& os, const Message& dt);
+	Message(const Message&) = default;
+	Message(Message&&) = default;
+	Message() = default;
+	Message& operator=(const Message&) = default;
+	Message& operator=(Message&&) = default;
 
 };
 

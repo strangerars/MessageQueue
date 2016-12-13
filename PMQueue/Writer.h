@@ -30,7 +30,7 @@ public:
 			};
 
 			auto val = m_functor();
-			m_q_ptr->put(forward<T>(val.first), val.second);
+			m_q_ptr->put(move(val.first), val.second);
 		}
 		log_debug ("WRITER IS OVER");
 	}
