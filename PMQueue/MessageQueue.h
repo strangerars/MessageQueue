@@ -2,7 +2,7 @@
 #include "RetCodes.h"
 #include <queue>
 #include <mutex>
-#include <map>
+#include <list>
 #include <queue>
 #include <iostream>//debug
 #include <condition_variable>
@@ -62,7 +62,7 @@ public:
 	}
 	void set_events(IMessageQueueEvents* subscriber)
 	{
-	    m_handlers[m_handlers_id++] = subscriber;
+	    m_handlers.push_back(subscriber);
 	}
 	MessageQueue(int queue_size, int hwm, int lwm) :
 		m_queue_size{ max(1,queue_size) },
@@ -113,25 +113,25 @@ private:
 	void notify_lwm() {
 		log_verbose("SHEDDING IS OFF");
 		for (const auto& e : m_handlers) {
-			e.second->on_lwm();
+			if(e != nullptr) e->on_lwm();
 		}
 	}
 	void notify_hwm() {
 		log_verbose("SHEDDING IS ON");
 		for (const auto& e : m_handlers) {
-			e.second->on_hwm();
+			if (e != nullptr) e->on_hwm();
 		}
 	}
 	void notify_start() {
 		log_debug("QUEUE is STARTED");
 		for (const auto& e : m_handlers) {
-			e.second->on_start();
+			if (e != nullptr) e->on_start();
 		}
 	}
 	void notify_stop() {
 		log_debug("QUEUE is STOPPED");
 		for (const auto& e : m_handlers) {
-			e.second->on_stop();
+			if (e != nullptr) e->on_stop();
 		}
 	}
 
@@ -143,8 +143,7 @@ private:
 	unique_ptr<std::priority_queue < P, vector<P>, Compare>> m_queue_ptr;
 	std::mutex m_mutex;
 	std::condition_variable m_non_empty_cond;
-	typedef std::map<int, IMessageQueueEvents*> HandlersMap;
-	HandlersMap m_handlers;
-	int m_handlers_id = 0;
+	using HandlersList = std::list<IMessageQueueEvents*>;
+	HandlersList m_handlers;
 };
 
