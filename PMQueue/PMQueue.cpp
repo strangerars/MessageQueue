@@ -66,21 +66,19 @@ void token_handler(const Message& msg) {
 	//std::this_thread::sleep_for(TIME_SCALE);
 }
 
-void print_params(ostream& os) {
-	os << "queue_size;message_size;lwl;hwl;" << endl;
-	os << QUEUE_SIZE << "," << MESSAGE_SIZE << "," << LWL << "," << HWL << ","<<endl;
+void print_header(ostream& os) {
+	os << "Test #,QUEUE SIZE,MESSAGE SIZE,LWL,HWL,Priority,Tokens count,Mean await time(ns)," << endl;
 }
-void print_profiler_result(ostream& os) {
-	os << "Priority;Tokens count;Mean await time(ns);" << endl;
+void print_profiler_result(ostream& os, int test_no) {
 	for (int i = 0; i < g_table.size(); i++) {
 		const auto& e = g_table[i];
-		os << i << "," << e.first << ",";
+		os << test_no<<","<< QUEUE_SIZE << "," << MESSAGE_SIZE 
+		   << "," << LWL << "," << HWL << "," << i << "," << e.first << ",";
 		if (e.first > 0) {
 			os << e.second.count() / e.first << ",";
 		}
 		os << endl;
 	}
-	os << endl;
 }
 void reset_profiler_result(){
 	for (int i = 0; i < g_table.size(); i++) {
@@ -93,12 +91,13 @@ int main()
 {
 	ofstream out;
 	out.open("output.csv");
+	print_header(out);
+	int test_no = 0;
 	for(MESSAGE_SIZE = MESSAGE_SIZE_MIN; MESSAGE_SIZE<MESSAGE_SIZE_MAX; MESSAGE_SIZE <<= 2)
 	 for(QUEUE_SIZE= QUEUE_SIZE_MIN;QUEUE_SIZE<QUEUE_SIZE_MAX;QUEUE_SIZE <<=1)
 	 {
-		 HWL = QUEUE_SIZE * 9 / 10;
-		 LWL = QUEUE_SIZE / 10;
-		 print_params(out);
+		HWL = QUEUE_SIZE * 9 / 10;
+		LWL = QUEUE_SIZE / 10;
 		using MSG = Message;
 		using MQ = MessageQueue<MSG>;
 		using W = Writer<MSG>;
@@ -108,16 +107,25 @@ int main()
 		W w2(q, &token_generator);
 		W w3(q, &token_generator);
 		W w4(q, &token_generator);
+		W w5(q, &token_generator);
+		W w6(q, &token_generator);
 		R r1(q, &token_handler);
 		R r2(q, &token_handler);
+		R r3(q, &token_handler);
+		R r4(q, &token_handler);
 		std::this_thread::sleep_for(1s);
 		q.start();
-		std::thread t1(&W::run, &w1);
+		std::thread t1;
+		t1 = std::thread(&W::run, &w1);
 		std::thread t2(&W::run, &w2);
 		std::thread t3(&W::run, &w3);
 		std::thread t4(&W::run, &w4);
-		std::thread t5(&R::run, &r1);
-		std::thread t6(&R::run, &r2);
+		std::thread t5(&W::run, &w5);
+		std::thread t6(&W::run, &w6);
+		std::thread t7(&R::run, &r1);
+		std::thread t8(&R::run, &r2);
+		std::thread t9(&R::run, &r3);
+		std::thread t10(&R::run, &r4);
 		std::this_thread::sleep_for(5s);
 		q.stop();
 		
@@ -133,7 +141,15 @@ int main()
 		log_debug("T5");
 		t6.join();
 		log_debug("T6");
-		print_profiler_result(out);
+		t7.join();
+		log_debug("T7");
+		t8.join();
+		log_debug("T8");
+		t9.join();
+		log_debug("T9");
+		t10.join();
+		log_debug("T10");
+		print_profiler_result(out, test_no++);
 		reset_profiler_result();
 	}
 	cout << "AFTER ALL" << endl;

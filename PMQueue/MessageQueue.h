@@ -9,6 +9,7 @@
 #include "IMessageQueueEvents.h"
 #include "Log.h"
 using namespace std;//debug
+using uint = unsigned int;
 template <typename T >
 class MessageQueue
 {
@@ -16,17 +17,18 @@ public:
 
 	inline RetCodes get(T& item) {
 		std::unique_lock<std::mutex> mlock(m_mutex);
-		while (m_queue_ptr->empty() && m_is_started)
+		while (q.empty() && m_is_started)
 		{
 			m_non_empty_cond.wait(mlock);
 		}
 		if (!m_is_started) return RetCodes::STOPED;
-		item = std::move(const_cast<T&>(m_queue_ptr->top().first));
-		m_queue_ptr->pop();
-		log_verbose("QUEUE READ");
-		lwm_check();
-		mlock.unlock();
+		if (q.pop(item)) {
+			log_verbose("QUEUE READ");
+			lwm_check();
+			mlock.unlock();
+		}
 		return RetCodes::OK;
+
 	}
 	inline RetCodes put(T&& item, int priority)
 	{
@@ -56,15 +58,11 @@ public:
 		std::unique_lock<std::mutex> mlock(m_mutex);
 	    m_handlers.push_back(subscriber);
 	}
-	using uint = unsigned int;
 	MessageQueue(uint queue_size, uint hwm, uint lwm) :
 		m_queue_size{ max(1u,queue_size) },
 		m_hwm{ max(1u,min(hwm,queue_size)) },
 		m_lwm{ max(0u, min(queue_size,min(hwm,lwm))) }
 	{
-		vector<P> vec;
-		vec.reserve(m_queue_size);
-		m_queue_ptr = std::make_unique<std::priority_queue < P, vector<P>, Compare>>(Compare(), move(vec));
 
 	}
 	MessageQueue(const MessageQueue&) = delete;
@@ -80,13 +78,14 @@ public:
 	}
 
 private:
+	uint m_count = 0;
 	inline RetCodes put_(T&& item, int priority)
 	{
 		std::unique_lock<std::mutex> mlock(m_mutex);
 		if (!m_is_started) return RetCodes::STOPED;
 		if (hwl_check() || m_shedding_is_on) return RetCodes::HWM;
 		try {
-			m_queue_ptr->push(make_pair(move(item), priority));
+			q.push(move(item), priority);
 		}
 		catch (...) {
 			return RetCodes::NO_SPACE;
@@ -103,7 +102,7 @@ private:
 		}
 	};
 	inline bool hwl_check() {
-		auto res = (m_queue_ptr->size() >= m_hwm);
+		auto res = (q.size() >= m_hwm);
 		if (res && !m_shedding_is_on) {
 			notify_hwm();
 			m_shedding_is_on = true;
@@ -112,7 +111,7 @@ private:
 	}
 
 	inline bool lwm_check() {
-		auto res =  (m_queue_ptr->size() <= m_lwm);
+		auto res = (q.size() <= m_lwm);
 		if (res && m_shedding_is_on) {
 			notify_lwm();
 			m_shedding_is_on = false;
@@ -154,5 +153,32 @@ private:
 	std::condition_variable m_non_empty_cond;
 	using HandlersList = std::list<IMessageQueueEvents*>;
 	HandlersList m_handlers;
+
+	template <typename T_>
+	class internal_queue {
+		const uint PRIORITY_COUNT = 20;
+		vector<list<T_>> vec_pr{ PRIORITY_COUNT };
+		uint m_count = 0;
+	public:
+		inline void push(T_&& arg, uint priority) {
+			vec_pr[priority].push_front(move(arg));
+			m_count++;
+		}
+		inline bool pop(T_& item) {
+			for (int i = 0; i < PRIORITY_COUNT; i++) {
+				if (!vec_pr[i].empty()) {
+				    item = const_cast<T_&&>(vec_pr[i].front());
+					vec_pr[i].pop_front();
+					m_count--;
+					return true;
+				}
+			}
+			return false;
+		}
+		bool empty() { return (m_count <= 0); }
+		uint size() { return m_count; }
+	};
+
+	internal_queue<T>  q;
 };
 
