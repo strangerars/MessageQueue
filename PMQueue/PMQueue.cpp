@@ -17,9 +17,9 @@ using namespace std;
 *********************************************************/
 constexpr unsigned int PRIORITY_COUNT     = 15;
 constexpr unsigned int MESSAGE_SIZE_MIN   = 2;
-constexpr unsigned int MESSAGE_SIZE_MAX   = 10000;
+constexpr unsigned int MESSAGE_SIZE_MAX   = 2000000;
 constexpr unsigned int QUEUE_SIZE_MIN     = 2;
-constexpr unsigned int QUEUE_SIZE_MAX     = 2000000;
+constexpr unsigned int QUEUE_SIZE_MAX     = 10000;
 constexpr auto TIME_SCALE                 = 1ns;
 /*********************************************************/
 unsigned int MESSAGE_SIZE = MESSAGE_SIZE_MIN;
