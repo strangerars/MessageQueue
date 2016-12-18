@@ -16,14 +16,14 @@ using namespace std;
 /********************************************************
 ****************TEST BRANCH PARAMS***********************
 *********************************************************/
-constexpr unsigned int PRIORITY_COUNT     = 15;
-constexpr unsigned int MESSAGE_SIZE_MIN   = 2;
-constexpr unsigned int MESSAGE_SIZE_MAX   = 2000000;
-constexpr unsigned int QUEUE_SIZE_MIN     = 2;
-constexpr unsigned int QUEUE_SIZE_MAX     = 10000;
-constexpr auto TIME_SCALE                 = 1ns;
-constexpr unsigned int READERS_COUNT      = 40;
-constexpr unsigned int WRITERS_COUNT      = 6;
+constexpr unsigned int PRIORITY_COUNT = 15;
+constexpr unsigned int MESSAGE_SIZE_MIN = 2;
+constexpr unsigned int MESSAGE_SIZE_MAX = 2000000;
+constexpr unsigned int QUEUE_SIZE_MIN = 2;
+constexpr unsigned int QUEUE_SIZE_MAX = 10000;
+constexpr auto TIME_SCALE = 1ns;
+constexpr unsigned int READERS_COUNT = 40;
+constexpr unsigned int WRITERS_COUNT = 6;
 /*********************************************************/
 unsigned int MESSAGE_SIZE = MESSAGE_SIZE_MIN;
 unsigned int QUEUE_SIZE   = QUEUE_SIZE_MIN;
@@ -97,7 +97,7 @@ int main()
 	print_header(out);
 	int test_no = 0;
 	for(MESSAGE_SIZE = MESSAGE_SIZE_MIN; MESSAGE_SIZE<MESSAGE_SIZE_MAX; MESSAGE_SIZE <<= 2)
-	 for(QUEUE_SIZE= QUEUE_SIZE_MIN;QUEUE_SIZE<QUEUE_SIZE_MAX;QUEUE_SIZE <<=1)
+	 for(QUEUE_SIZE= QUEUE_SIZE_MIN;QUEUE_SIZE<QUEUE_SIZE_MAX;QUEUE_SIZE <<= 1)
 	 {
 		HWL = QUEUE_SIZE * 9 / 10;
 		LWL = QUEUE_SIZE / 10;
