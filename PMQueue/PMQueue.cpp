@@ -12,6 +12,7 @@
 #include <thread>
 #include <chrono>
 #include <cstdlib>
+#include <string>
 using namespace std;
 /********************************************************
 ****************TEST BRANCH PARAMS***********************
@@ -92,8 +93,10 @@ void reset_profiler_result(){
 
 int main()
 {
+	auto now = std::chrono::system_clock::now();
+	auto now_str = std::to_string((std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()));
 	ofstream out;
-	out.open("output.csv");
+	out.open("output_"+now_str+".csv");
 	print_header(out);
 	int test_no = 0;
 	for(MESSAGE_SIZE = MESSAGE_SIZE_MIN; MESSAGE_SIZE<MESSAGE_SIZE_MAX; MESSAGE_SIZE <<= 2)
