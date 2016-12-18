@@ -2,6 +2,7 @@
 //
 
 #include "stdafx.h"
+#define DEBUG
 #include "log.h"
 #include "MessageQueue.h"
 #include "Writer.h"
@@ -15,12 +16,14 @@ using namespace std;
 /********************************************************
 ****************TEST BRANCH PARAMS***********************
 *********************************************************/
-constexpr unsigned int PRIORITY_COUNT     = 15;
-constexpr unsigned int MESSAGE_SIZE_MIN   = 2;
-constexpr unsigned int MESSAGE_SIZE_MAX   = 2000000;
-constexpr unsigned int QUEUE_SIZE_MIN     = 2;
-constexpr unsigned int QUEUE_SIZE_MAX     = 10000;
-constexpr auto TIME_SCALE                 = 1ns;
+constexpr unsigned int PRIORITY_COUNT = 15;
+constexpr unsigned int MESSAGE_SIZE_MIN = 2;
+constexpr unsigned int MESSAGE_SIZE_MAX = 2000000;
+constexpr unsigned int QUEUE_SIZE_MIN = 2;
+constexpr unsigned int QUEUE_SIZE_MAX = 10000;
+constexpr auto TIME_SCALE = 1ns;
+constexpr unsigned int READERS_COUNT = 40;
+constexpr unsigned int WRITERS_COUNT = 6;
 /*********************************************************/
 unsigned int MESSAGE_SIZE = MESSAGE_SIZE_MIN;
 unsigned int QUEUE_SIZE   = QUEUE_SIZE_MIN;
@@ -70,7 +73,7 @@ void print_header(ostream& os) {
 	os << "Test #,QUEUE SIZE,MESSAGE SIZE,LWL,HWL,Priority,Tokens count,Mean await time(ns)," << endl;
 }
 void print_profiler_result(ostream& os, int test_no) {
-	for (int i = 0; i < g_table.size(); i++) {
+	for (unsigned int i = 0u; i < g_table.size(); i++) {
 		const auto& e = g_table[i];
 		os << test_no<<","<< QUEUE_SIZE << "," << MESSAGE_SIZE 
 		   << "," << LWL << "," << HWL << "," << i << "," << e.first << ",";
@@ -81,7 +84,7 @@ void print_profiler_result(ostream& os, int test_no) {
 	}
 }
 void reset_profiler_result(){
-	for (int i = 0; i < g_table.size(); i++) {
+	for (unsigned int i = 0u; i < g_table.size(); i++) {
 		g_table[i].first = 0;
 		g_table[i].second = 0s;
 	}
@@ -94,7 +97,7 @@ int main()
 	print_header(out);
 	int test_no = 0;
 	for(MESSAGE_SIZE = MESSAGE_SIZE_MIN; MESSAGE_SIZE<MESSAGE_SIZE_MAX; MESSAGE_SIZE <<= 2)
-	 for(QUEUE_SIZE= QUEUE_SIZE_MIN;QUEUE_SIZE<QUEUE_SIZE_MAX;QUEUE_SIZE <<=1)
+	 for(QUEUE_SIZE= QUEUE_SIZE_MIN;QUEUE_SIZE<QUEUE_SIZE_MAX;QUEUE_SIZE <<= 1)
 	 {
 		HWL = QUEUE_SIZE * 9 / 10;
 		LWL = QUEUE_SIZE / 10;
@@ -103,52 +106,29 @@ int main()
 		using W = Writer<MSG>;
 		using R = Reader<MSG>;
 		MQ q{ QUEUE_SIZE,HWL,LWL };
-		W w1(q, &token_generator);
-		W w2(q, &token_generator);
-		W w3(q, &token_generator);
-		W w4(q, &token_generator);
-		W w5(q, &token_generator);
-		W w6(q, &token_generator);
-		R r1(q, &token_handler);
-		R r2(q, &token_handler);
-		R r3(q, &token_handler);
-		R r4(q, &token_handler);
+		
+		vector<unique_ptr<W>> w_vector;
+		vector<unique_ptr<R>> r_vector;
+		for (int i = 0; i < WRITERS_COUNT; i++)
+			w_vector.emplace_back(new W(q, &token_generator));
+		for (int i = 0; i < READERS_COUNT; i++)
+			r_vector.emplace_back(new R(q, &token_handler));
+
 		std::this_thread::sleep_for(1s);
 		q.start();
-		std::thread t1;
-		t1 = std::thread(&W::run, &w1);
-		std::thread t2(&W::run, &w2);
-		std::thread t3(&W::run, &w3);
-		std::thread t4(&W::run, &w4);
-		std::thread t5(&W::run, &w5);
-		std::thread t6(&W::run, &w6);
-		std::thread t7(&R::run, &r1);
-		std::thread t8(&R::run, &r2);
-		std::thread t9(&R::run, &r3);
-		std::thread t10(&R::run, &r4);
+		vector<std::thread> t_vector(WRITERS_COUNT + READERS_COUNT);
+		for (int i = 0; i < (WRITERS_COUNT + READERS_COUNT); i++) {
+			if (i < WRITERS_COUNT)
+				t_vector[i] = std::thread(&W::run, w_vector[i].get());
+			else
+				t_vector[i] = std::thread(&R::run, r_vector[i- WRITERS_COUNT].get());
+		}
 		std::this_thread::sleep_for(5s);
 		q.stop();
-		
-		t1.join();
-		log_debug("T1");
-		t2.join();
-		log_debug("T2");
-		t3.join();
-		log_debug("T3");
-		t4.join();
-		log_debug("T4");
-		t5.join();
-		log_debug("T5");
-		t6.join();
-		log_debug("T6");
-		t7.join();
-		log_debug("T7");
-		t8.join();
-		log_debug("T8");
-		t9.join();
-		log_debug("T9");
-		t10.join();
-		log_debug("T10");
+		for (int i = 0; i < (WRITERS_COUNT + READERS_COUNT); i++) {
+			t_vector[i].join();
+			log_debug("thread joined");
+		}
 		print_profiler_result(out, test_no++);
 		reset_profiler_result();
 	}
