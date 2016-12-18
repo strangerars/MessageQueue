@@ -16,14 +16,14 @@ using namespace std;
 /********************************************************
 ****************TEST BRANCH PARAMS***********************
 *********************************************************/
-constexpr unsigned int PRIORITY_COUNT     = 1;
-constexpr unsigned int MESSAGE_SIZE_MIN   = 20;
-constexpr unsigned int MESSAGE_SIZE_MAX   = 21;
-constexpr unsigned int QUEUE_SIZE_MIN     = 2;
-constexpr unsigned int QUEUE_SIZE_MAX     = 100;
-constexpr auto TIME_SCALE                 = 1ns;
-constexpr unsigned int READERS_COUNT      = 4;
-constexpr unsigned int WRITERS_COUNT      = 6;
+constexpr unsigned int PRIORITY_COUNT = 15;
+constexpr unsigned int MESSAGE_SIZE_MIN = 2;
+constexpr unsigned int MESSAGE_SIZE_MAX = 2000000;
+constexpr unsigned int QUEUE_SIZE_MIN = 2;
+constexpr unsigned int QUEUE_SIZE_MAX = 10000;
+constexpr auto TIME_SCALE = 1ns;
+constexpr unsigned int READERS_COUNT = 40;
+constexpr unsigned int WRITERS_COUNT = 6;
 /*********************************************************/
 unsigned int MESSAGE_SIZE = MESSAGE_SIZE_MIN;
 unsigned int QUEUE_SIZE   = QUEUE_SIZE_MIN;
