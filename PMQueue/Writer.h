@@ -24,7 +24,7 @@ public:
 			if (m_current_state == SLEEPING) {
 				std::unique_lock<std::mutex> sleep_lock(m_mutex);
 				while (m_current_state == SLEEPING) {
-					m_sleeping_cond.wait(sleep_lock);
+					m_sleeping_cond.wait_for(sleep_lock, 1s);
 				}
 				if (m_current_state == STOPPED) break;
 			};
