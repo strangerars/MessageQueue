@@ -55,7 +55,6 @@ pair<Message, int> token_generator() {
 
 	std::string str;
 	str.insert(0, MESSAGE_SIZE, '*');
-	//std::this_thread::sleep_for(TIME_SCALE);
 	Message msg;
 	msg.priority = priority;
 	msg.s = move(str);
@@ -68,13 +67,28 @@ void token_handler(const Message& msg) {
 	auto interval = std::chrono::duration_cast<std::chrono::nanoseconds>(now - msg.created);
 	g_table[msg.priority].first++;
 	g_table[msg.priority].second += interval;
-	//std::this_thread::sleep_for(TIME_SCALE);
 }
 
-void print_header(ostream& os) {
+inline void print_test_params() {
+	log_debug("****************************************");
+	log_debug("* Test parameters:");
+	log_debug("****************************************");
+	log_debug("* PRIORITY_COUNT=" + std::to_string(PRIORITY_COUNT));
+	log_debug("* MESSAGE_SIZE_MIN=" + std::to_string(MESSAGE_SIZE_MIN));
+	log_debug("* MESSAGE_SIZE_MAX=" + std::to_string(MESSAGE_SIZE_MAX));
+	log_debug("* QUEUE_SIZE_MIN=" + std::to_string(QUEUE_SIZE_MIN));
+	log_debug("* QUEUE_SIZE_MAX=" + std::to_string(QUEUE_SIZE_MAX));
+	log_debug("* TIME_SCALE(sec)=" + std::to_string(TIME_SCALE.count()));
+	log_debug("* READERS_COUNT=" + std::to_string(READERS_COUNT));
+	log_debug("* WRITERS_COUNT=" + std::to_string(WRITERS_COUNT));
+	log_debug("* REPEAT_FACTOR=" + std::to_string(REPEAT_FACTOR));
+	log_debug("****************************************");
+}
+
+inline void print_header(ostream& os) {
 	os << "Test #,QUEUE SIZE,MESSAGE SIZE,LWL,HWL,Priority,Tokens count,Mean await time(ns)," << endl;
 }
-void print_profiler_result(ostream& os, int test_no) {
+inline void print_profiler_result(ostream& os, int test_no) {
 	for (unsigned int i = 0u; i < g_table.size(); i++) {
 		const auto& e = g_table[i];
 		os << test_no<<","<< QUEUE_SIZE << "," << MESSAGE_SIZE 
@@ -85,7 +99,7 @@ void print_profiler_result(ostream& os, int test_no) {
 		os << endl;
 	}
 }
-void reset_profiler_result(){
+inline void reset_profiler_result(){
 	for (unsigned int i = 0u; i < g_table.size(); i++) {
 		g_table[i].first = 0;
 		g_table[i].second = 0s;
@@ -94,13 +108,13 @@ void reset_profiler_result(){
 
 int main()
 {
+	print_test_params();
 	auto now = std::chrono::system_clock::now();
 	auto now_str = std::to_string((std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()));
 	ofstream out;
 	out.open("output_" + now_str + ".csv");
 	print_header(out);
-	int test_no = 0;
-	for (int i_ = 0; i_ < REPEAT_FACTOR; i_++)
+	for (int test_no = 0; test_no < REPEAT_FACTOR; test_no++)
 		for (MESSAGE_SIZE = MESSAGE_SIZE_MIN; MESSAGE_SIZE < MESSAGE_SIZE_MAX; MESSAGE_SIZE <<= 2)
 			for (QUEUE_SIZE = QUEUE_SIZE_MIN; QUEUE_SIZE < QUEUE_SIZE_MAX; QUEUE_SIZE <<= 1)
 			{
@@ -135,10 +149,10 @@ int main()
 						t_vector[i].join();
 						log_debug("thread joined");
 					}
-					print_profiler_result(out, test_no++);
+					print_profiler_result(out, test_no);
 					reset_profiler_result();
 				}
-				cout << "AFTER ALL " <<i_<< endl;
+				log_debug("Test #" + std::to_string(test_no) + " finished");
 			}
 	std::this_thread::sleep_for(TIME_SCALE);
 }
