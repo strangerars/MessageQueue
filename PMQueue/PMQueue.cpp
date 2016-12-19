@@ -2,7 +2,7 @@
 //
 
 #include "stdafx.h"
-#define DEBUG
+#define LOG_DEBUG
 #include "log.h"
 #include "MessageQueue.h"
 #include "Writer.h"
@@ -18,13 +18,14 @@ using namespace std;
 ****************TEST BRANCH PARAMS***********************
 *********************************************************/
 constexpr unsigned int PRIORITY_COUNT = 15;
-constexpr unsigned int MESSAGE_SIZE_MIN = 2;
-constexpr unsigned int MESSAGE_SIZE_MAX = 2000000;
-constexpr unsigned int QUEUE_SIZE_MIN = 2;
-constexpr unsigned int QUEUE_SIZE_MAX = 10000;
-constexpr auto TIME_SCALE = 1ns;
-constexpr unsigned int READERS_COUNT = 40;
+constexpr unsigned int MESSAGE_SIZE_MIN = 50;
+constexpr unsigned int MESSAGE_SIZE_MAX = 51;
+constexpr unsigned int QUEUE_SIZE_MIN = 20;
+constexpr unsigned int QUEUE_SIZE_MAX = 21;
+constexpr         auto TIME_SCALE    = 10s;
+constexpr unsigned int READERS_COUNT = 4;
 constexpr unsigned int WRITERS_COUNT = 6;
+constexpr unsigned int REPEAT_FACTOR = 1;
 /*********************************************************/
 unsigned int MESSAGE_SIZE = MESSAGE_SIZE_MIN;
 unsigned int QUEUE_SIZE   = QUEUE_SIZE_MIN;
@@ -96,45 +97,49 @@ int main()
 	auto now = std::chrono::system_clock::now();
 	auto now_str = std::to_string((std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()));
 	ofstream out;
-	out.open("output_"+now_str+".csv");
+	out.open("output_" + now_str + ".csv");
 	print_header(out);
 	int test_no = 0;
-	for(MESSAGE_SIZE = MESSAGE_SIZE_MIN; MESSAGE_SIZE<MESSAGE_SIZE_MAX; MESSAGE_SIZE <<= 2)
-	 for(QUEUE_SIZE= QUEUE_SIZE_MIN;QUEUE_SIZE<QUEUE_SIZE_MAX;QUEUE_SIZE <<= 1)
-	 {
-		HWL = QUEUE_SIZE * 9 / 10;
-		LWL = QUEUE_SIZE / 10;
-		using MSG = Message;
-		using MQ = MessageQueue<MSG>;
-		using W = Writer<MSG>;
-		using R = Reader<MSG>;
-		MQ q{ QUEUE_SIZE,HWL,LWL };
-		
-		vector<unique_ptr<W>> w_vector;
-		vector<unique_ptr<R>> r_vector;
-		for (int i = 0; i < WRITERS_COUNT; i++)
-			w_vector.emplace_back(new W(q, &token_generator));
-		for (int i = 0; i < READERS_COUNT; i++)
-			r_vector.emplace_back(new R(q, &token_handler));
+	for (int i_ = 0; i_ < REPEAT_FACTOR; i_++)
+		for (MESSAGE_SIZE = MESSAGE_SIZE_MIN; MESSAGE_SIZE < MESSAGE_SIZE_MAX; MESSAGE_SIZE <<= 2)
+			for (QUEUE_SIZE = QUEUE_SIZE_MIN; QUEUE_SIZE < QUEUE_SIZE_MAX; QUEUE_SIZE <<= 1)
+			{
+				std::this_thread::sleep_for(TIME_SCALE);
+				{
+					HWL = QUEUE_SIZE * 9 / 10;
+					LWL = QUEUE_SIZE / 10;
+					using MSG = Message;
+					using MQ = MessageQueue<MSG>;
+					using W = Writer<MSG>;
+					using R = Reader<MSG>;
+					MQ q{ QUEUE_SIZE,HWL,LWL };
 
-		std::this_thread::sleep_for(1s);
-		q.start();
-		vector<std::thread> t_vector(WRITERS_COUNT + READERS_COUNT);
-		for (int i = 0; i < (WRITERS_COUNT + READERS_COUNT); i++) {
-			if (i < WRITERS_COUNT)
-				t_vector[i] = std::thread(&W::run, w_vector[i].get());
-			else
-				t_vector[i] = std::thread(&R::run, r_vector[i- WRITERS_COUNT].get());
-		}
-		std::this_thread::sleep_for(5s);
-		q.stop();
-		for (int i = 0; i < (WRITERS_COUNT + READERS_COUNT); i++) {
-			t_vector[i].join();
-			log_debug("thread joined");
-		}
-		print_profiler_result(out, test_no++);
-		reset_profiler_result();
-	}
-	cout << "AFTER ALL" << endl;
+					vector<unique_ptr<W>> w_vector;
+					vector<unique_ptr<R>> r_vector;
+					for (int i = 0; i < WRITERS_COUNT; i++)
+						w_vector.emplace_back(new W(q, &token_generator));
+					for (int i = 0; i < READERS_COUNT; i++)
+						r_vector.emplace_back(new R(q, &token_handler));
+
+					q.start();
+					vector<std::thread> t_vector(WRITERS_COUNT + READERS_COUNT);
+					for (int i = 0; i < (WRITERS_COUNT + READERS_COUNT); i++) {
+						if (i < WRITERS_COUNT)
+							t_vector[i] = std::thread(&W::run, w_vector[i].get());
+						else
+							t_vector[i] = std::thread(&R::run, r_vector[i - WRITERS_COUNT].get());
+					}
+					std::this_thread::sleep_for(TIME_SCALE);
+					q.stop();
+					for (int i = 0; i < (WRITERS_COUNT + READERS_COUNT); i++) {
+						t_vector[i].join();
+						log_debug("thread joined");
+					}
+					print_profiler_result(out, test_no++);
+					reset_profiler_result();
+				}
+				cout << "AFTER ALL " <<i_<< endl;
+			}
+	std::this_thread::sleep_for(TIME_SCALE);
 }
 
