@@ -144,7 +144,7 @@ int main(int argc, char * argv[])
 			using MQ = MessageQueue<MSG>;
 			using W = Writer<MSG>;
 			using R = Reader<MSG>;
-			MQ q{ QUEUE_SIZE,HWL,LWL };
+			MQ q{ QUEUE_SIZE,HWL,LWL,PRIORITY_COUNT };
 
 			vector<unique_ptr<W>> w_vector;
 			vector<unique_ptr<R>> r_vector;

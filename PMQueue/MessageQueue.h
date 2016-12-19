@@ -58,10 +58,11 @@ public:
 		std::unique_lock<std::mutex> mlock(m_mutex);
 	    m_handlers.push_back(subscriber);
 	}
-	MessageQueue(uint queue_size, uint hwm, uint lwm) :
+	MessageQueue(uint queue_size, uint hwm, uint lwm, uint priority_count) :
 		m_queue_size{ max(1u,queue_size) },
 		m_hwm{ max(1u,min(hwm,queue_size)) },
-		m_lwm{ max(0u, min(queue_size,min(hwm,lwm))) }
+		m_lwm{ max(0u, min(queue_size,min(hwm,lwm))) },
+		q{ max(1u, priority_count) }
 	{
 
 	}
@@ -156,16 +157,16 @@ private:
 
 	template <typename T_>
 	class internal_queue {
-		const uint PRIORITY_COUNT = 20;
-		vector<list<T_>> vec_pr{ PRIORITY_COUNT };
+		vector<list<T_>> vec_pr;
 		uint m_count = 0;
+
 	public:
 		inline void push(T_&& arg, uint priority) {
 			vec_pr[priority].push_front(move(arg));
 			m_count++;
 		}
 		inline bool pop(T_& item) {
-			for (int i = 0; i < PRIORITY_COUNT; i++) {
+			for (int i = 0; i < vec_pr.size(); i++) {
 				if (!vec_pr[i].empty()) {
 				    item = const_cast<T_&&>(vec_pr[i].front());
 					vec_pr[i].pop_front();
@@ -177,6 +178,7 @@ private:
 		}
 		bool empty() { return (m_count <= 0); }
 		uint size() { return m_count; }
+		internal_queue(uint priority_count) : vec_pr{ priority_count} { }
 	};
 
 	internal_queue<T>  q;
