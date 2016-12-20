@@ -13,10 +13,10 @@ private:
 	std::mutex m_mutex;
 	std::condition_variable m_sleeping_cond;
 public:
-	Writer(MessageQueue<T>& q, F func) {
+	Writer(MessageQueue<T>& q, F func):
+		m_q_ptr{ &q }, 
+		m_functor{ func } {
 		q.set_events(this);
-		m_q_ptr = &q;
-		m_functor = func;
 	}
 	void run() {
 		while (m_current_state != STOPPED) {

@@ -55,6 +55,7 @@ public:
 		std::unique_lock<std::mutex> mlock(m_mutex);
 	    m_handlers.push_back(subscriber);
 	}
+	
 	MessageQueue(uint queue_size, uint hwm, uint lwm, uint priority_count) :
 		m_queue_size{ max(1u,queue_size) },
 		m_hwm{ max(1u,min(hwm,queue_size)) },

@@ -15,10 +15,11 @@ class Reader
 	}
 
 public:
-	Reader(MessageQueue<T>& q, F func) {
-		m_q_ptr = &q;
-		m_handle_functor = func;
-	}
+	Reader(MessageQueue<T>& q, F func) : 
+		m_q_ptr{ &q }, 
+		m_handle_functor{ func } 
+	{}
+
 	void run() {
 		T a;
 		RetCodes ret = RetCodes::OK;
