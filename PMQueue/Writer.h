@@ -2,7 +2,6 @@
 #include "MessageQueue.h"
 #include "Log.h"
 #include "IMessageQueueEvents.h"
-#include <iostream>
 using namespace std;
 template <typename T >
 class Writer: private IMessageQueueEvents

@@ -1,14 +1,12 @@
 #pragma once
 #include "RetCodes.h"
-#include <queue>
 #include <mutex>
 #include <list>
 #include <queue>
-#include <iostream>//debug
 #include <condition_variable>
 #include "IMessageQueueEvents.h"
 #include "Log.h"
-using namespace std;//debug
+
 template <typename T >
 class MessageQueue
 {
@@ -75,7 +73,7 @@ public:
 			stop();
 		}
 		catch (...) {
-			if (!std::uncaught_exception()) throw;
+			//destructor fails
 		}
 	}
 

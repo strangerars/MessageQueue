@@ -7,14 +7,14 @@
 #include "MessageQueue.h"
 #include "Writer.h"
 #include "Reader.h"
-#include <iostream>
+//#include <iostream>
 #include <fstream>
-#include <thread>
-#include <chrono>
-#include <cstdlib>
+//#include <thread>
+//#include <chrono>
+//#include <cstdlib>
 #include <string>
-#include <cmath>
-using namespace std;
+//#include <cmath>
+//using namespace std;
 /********************************************************
 ****************TEST BRANCH PARAMS***********************
 *********************************************************/
@@ -125,7 +125,11 @@ inline void reset_profiler_result(){
 int parse_cmd_params(int, char *[]);
 int main(int argc, char * argv[])
 {
-	parse_cmd_params(argc, argv);
+	if (parse_cmd_params(argc, argv) < 0)
+	{
+		log_debug("cmdline args parse error");
+		return -1;
+	}
 	g_table.resize(PRIORITY_COUNT);
 	print_test_params();
 	auto now = std::chrono::system_clock::now();
@@ -134,8 +138,8 @@ int main(int argc, char * argv[])
 	string filename("output_" + now_str + ".csv");
 	out.open(filename);
 	print_header(out);
-	std::this_thread::sleep_for(TIME_SCALE);
-	for (int test_no = 0; test_no < REPEAT_FACTOR; test_no++)
+	std::this_thread::sleep_for(min(TIME_SCALE, 5s));
+	for (unsigned int test_no = 0u; test_no < REPEAT_FACTOR; test_no++)
 	{
 		{
 			HWL = QUEUE_SIZE * 9 / 10;
@@ -148,14 +152,14 @@ int main(int argc, char * argv[])
 
 			vector<unique_ptr<W>> w_vector;
 			vector<unique_ptr<R>> r_vector;
-			for (int i = 0; i < WRITERS_COUNT; i++)
+			for (unsigned int i = 0u; i < WRITERS_COUNT; i++)
 				w_vector.emplace_back(new W(q, &token_generator));
-			for (int i = 0; i < READERS_COUNT; i++)
+			for (unsigned int i = 0u; i < READERS_COUNT; i++)
 				r_vector.emplace_back(new R(q, &token_handler));
 
 			q.start();
 			vector<std::thread> t_vector(WRITERS_COUNT + READERS_COUNT);
-			for (int i = 0; i < (WRITERS_COUNT + READERS_COUNT); i++) {
+			for (unsigned int i = 0u; i < (WRITERS_COUNT + READERS_COUNT); i++) {
 				if (i < WRITERS_COUNT)
 					t_vector[i] = std::thread(&W::run, w_vector[i].get());
 				else
@@ -163,7 +167,7 @@ int main(int argc, char * argv[])
 			}
 			std::this_thread::sleep_for(TIME_SCALE);
 			q.stop();
-			for (int i = 0; i < (WRITERS_COUNT + READERS_COUNT); i++) {
+			for (unsigned int i = 0u; i < (WRITERS_COUNT + READERS_COUNT); i++) {
 				t_vector[i].join();
 				log_debug("thread joined");
 			}
@@ -172,7 +176,7 @@ int main(int argc, char * argv[])
 		}
 		log_debug("Test #" + std::to_string(test_no) + " finished");
 
-		std::this_thread::sleep_for(TIME_SCALE);
+		std::this_thread::sleep_for(min(TIME_SCALE,5s));
 		log_debug("See result in " + filename);
 	}
 }
@@ -253,4 +257,5 @@ int parse_cmd_params(int argc, char * argv[]) {
 		catch (...) { log_debug("Failed to parseREADERS_COUNT");  return -1; }
 	}
 	else { return 0; }
+	return 0;
 }
