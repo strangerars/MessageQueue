@@ -84,6 +84,8 @@ void token_handler(const Message& msg) {
 
 inline void print_test_params() {
 	log_debug("****************************************");
+	log_debug("* INTERNAL QUEUE implementation ");
+	log_debug("****************************************");
 	log_debug("* Test parameters:");
 	log_debug("****************************************");
 	log_debug("* PRIORITY_COUNT="  + std::to_string(PRIORITY_COUNT));
