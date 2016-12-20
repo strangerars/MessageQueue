@@ -18,12 +18,11 @@ public:
 		{
 			m_non_empty_cond.wait(mlock);
 		}
-		if (!m_is_started) return RetCodes::STOPED;
+		if (!m_is_started) return RetCodes::STOPPED;
 		item = std::move(const_cast<T&>(m_queue_ptr->top().first));
 		m_queue_ptr->pop();
 		log_verbose("QUEUE READ");
 		lwm_check();
-		mlock.unlock();
 		return RetCodes::OK;
 	}
 	inline RetCodes put(T&& item, int priority)
@@ -62,7 +61,7 @@ public:
 	{
 		vector<P> vec;
 		vec.reserve(m_queue_size);
-		m_queue_ptr = std::make_unique<std::priority_queue < P, vector<P>, Compare>>(Compare(), move(vec));
+		m_queue_ptr = std::make_unique<std::priority_queue < P, vector<P>, Compare>>(Compare(), std::move(vec));
 
 	}
 	MessageQueue(const MessageQueue&) = delete;
@@ -81,7 +80,7 @@ private:
 	inline RetCodes put_(T&& item, int priority)
 	{
 		std::unique_lock<std::mutex> mlock(m_mutex);
-		if (!m_is_started) return RetCodes::STOPED;
+		if (!m_is_started) return RetCodes::STOPPED;
 		if (hwl_check() || m_shedding_is_on) return RetCodes::HWM;
 		try {
 			m_queue_ptr->push(make_pair(move(item), priority));

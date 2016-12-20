@@ -7,14 +7,8 @@
 #include "MessageQueue.h"
 #include "Writer.h"
 #include "Reader.h"
-//#include <iostream>
 #include <fstream>
-//#include <thread>
-//#include <chrono>
-//#include <cstdlib>
 #include <string>
-//#include <cmath>
-//using namespace std;
 /********************************************************
 ****************TEST BRANCH PARAMS***********************
 *********************************************************/
@@ -177,8 +171,8 @@ int main(int argc, char * argv[])
 		log_debug("Test #" + std::to_string(test_no) + " finished");
 
 		std::this_thread::sleep_for(min(TIME_SCALE,5s));
-		log_debug("See result in " + filename);
 	}
+	log_debug("See result in " + filename);
 }
 
 //Very ad-hoc parameter parser
