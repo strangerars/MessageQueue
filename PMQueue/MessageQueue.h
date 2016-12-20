@@ -6,7 +6,7 @@
 #include <condition_variable>
 #include "IMessageQueueEvents.h"
 #include "Log.h"
-
+using uint = unsigned int;
 template <typename T >
 class MessageQueue
 {
@@ -54,7 +54,7 @@ public:
 		std::unique_lock<std::mutex> mlock(m_mutex);
 	    m_handlers.push_back(subscriber);
 	}
-	using uint = unsigned int;
+
 	MessageQueue(uint queue_size, uint hwm, uint lwm) :
 		m_queue_size{ max(1u,queue_size) },
 		m_hwm{ max(1u,min(hwm,queue_size)) },
