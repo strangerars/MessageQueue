@@ -2,5 +2,5 @@
 
 ***
 
-* "MessageQueue wiki":https://github.com/strangerars/MessageQueue/wiki
-* "MessageQueue releases":https://github.com/strangerars/MessageQueue/releases
+* "MessageQueue wiki":https://github.com/strangerars/MessageQueue/wiki - пояснения к коду
+* "MessageQueue releases":https://github.com/strangerars/MessageQueue/releases - бинарные файлы
