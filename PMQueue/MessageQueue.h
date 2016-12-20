@@ -18,11 +18,11 @@ public:
 		{
 			m_non_empty_cond.wait(mlock);
 		}
-		if (!m_is_started) return RetCodes::STOPED;
+
+		if (!m_is_started) return RetCodes::STOPPED;
 		if (q.pop(item)) {
 			log_verbose("QUEUE READ");
 			lwm_check();
-			mlock.unlock();
 		}
 		return RetCodes::OK;
 
@@ -61,9 +61,8 @@ public:
 		m_hwm{ max(1u,min(hwm,queue_size)) },
 		m_lwm{ max(0u, min(queue_size,min(hwm,lwm))) },
 		q{ max(1u, priority_count) }
-	{
+	{}
 
-	}
 	MessageQueue(const MessageQueue&) = delete;
 	MessageQueue(MessageQueue&&) = delete;
 	
@@ -81,7 +80,7 @@ private:
 	inline RetCodes put_(T&& item, int priority)
 	{
 		std::unique_lock<std::mutex> mlock(m_mutex);
-		if (!m_is_started) return RetCodes::STOPED;
+		if (!m_is_started) return RetCodes::STOPPED;
 		if (hwl_check() || m_shedding_is_on) return RetCodes::HWM;
 		try {
 			q.push(move(item), priority);

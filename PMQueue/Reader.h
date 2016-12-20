@@ -23,7 +23,7 @@ public:
 	void run() {
 		T a;
 		RetCodes ret = RetCodes::OK;
-		while (ret != RetCodes::STOPED) {
+		while (ret != RetCodes::STOPPED) {
 			ret = m_q_ptr->get(a);
 			if(ret == RetCodes::OK) handle_message(move(a));
 		}
