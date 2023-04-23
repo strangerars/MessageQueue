@@ -1,6 +1,7 @@
 *MessageQueue*
 
 ***
+Some gerrit change:
 
 * "MessageQueue wiki":https://github.com/strangerars/MessageQueue/wiki - пояснения к коду
 * "MessageQueue releases":https://github.com/strangerars/MessageQueue/releases - бинарные файлы
